@@ -61,16 +61,21 @@ def get_scanner_info(client_id):
 
 
 def print_terminal_qr(url):
-    """Renders the QR code directly inside the terminal console."""
+    """Renders the QR code and explicitly prints all web portal links to the terminal."""
     qr = qrcode.QRCode(border=2)
     qr.add_data(url)
     qr.make(fit=True)
-    print("\n" + "=" * 50)
-    print(f" 🔒 HTTPS SCANNER LIVE AT: {url}")
+    print("\n" + "=" * 60)
+    print(" 🚀 SERVER LIVE — ACCESSIBLE AT THE FOLLOWING URLS:")
+    print("=" * 60)
+    print(f" 📱 Mobile Scanner:  {url}")
+    print(f" 🔑 Lecturer Portal: {url}/lecturer")
+    print(f" ⚙️ Admin Control:   {url}/admin")
+    print("=" * 60)
     print(" SCAN QR CODE BELOW WITH YOUR MOBILE PHONE:")
-    print("=" * 50)
+    print("=" * 60)
     qr.print_ascii(invert=True)
-    print("=" * 50 + "\n")
+    print("=" * 60 + "\n")
 
 
 # ==========================================
@@ -586,7 +591,6 @@ def student_heartbeat():
             400,
         )
 
-    # Attempt numerical standardisation if numeric ID exists in database
     cleaned_id, _ = AttendanceAIEngine.clean_and_filter(raw_student_id)
     target_id = cleaned_id if cleaned_id else raw_student_id
 
@@ -601,14 +605,12 @@ def student_heartbeat():
     name = user[0] if user else raw_student_id
     role = user[1] if user else "student"
 
-    # Track presence in system memory
     STUDENT_HEARTBEATS[target_id] = {
         "last_seen": datetime.now(),
         "location": location,
         "name": name,
     }
 
-    # Log heartbeat activity
     log_general_access(
         f"ClientApp ({location})", target_id, name, role, "HEARTBEAT"
     )
