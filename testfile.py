@@ -1,28 +1,26 @@
 from ultralytics import YOLO
 import cv2
 
-# 1. Load the YOLOv8 model. 
-# We use 'yolov8s.pt' (small) instead of 'n' (nano) for better accuracy on partial bodies.
+# Load the model
 model = YOLO("yolov8s.pt") 
 
-# 2. Define the path to your photo
+# Define input and output paths
 image_path = "computer_lab.jpg"
+output_path = "computer_lab_annotated.jpg"
 
-# 3. Run inference
-#   - conf=0.25: Lowering confidence helps catch occluded (head/shoulder) people.
-#   - classes=[0]: COCO dataset class 0 is 'person'.
-#   - imgsz=640: Standard image size. Increase to 1280 if the image is wide and heads are tiny.
-#   - save=True: Automatically saves a copy of the image with bounding boxes drawn.
-results = model.predict(source=image_path, conf=0.25, classes=[0], imgsz=640, save=True)
+# Run inference
+results = model.predict(source=image_path, conf=0.25, classes=[0], imgsz=640)
 
-# 4. Extract and print the count
+# Extract count and save the image
 for result in results:
-    # result.boxes contains the bounding boxes for all detected people
     person_count = len(result.boxes)
     print(f"Total people detected: {person_count}")
-    
-    # Optional: Display the result immediately using OpenCV
-    annotated_frame = result.plot()
-    cv2.imshow("YOLOv8 Detection", annotated_frame)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+
+
+# To save the image processed image out to file, uncomment below
+#    # Generate the image array with bounding boxes drawn on it
+#    annotated_frame = result.plot()
+#    
+#    # Save the array as a JPEG file
+#    cv2.imwrite(output_path, annotated_frame)
+#    print(f"Saved annotated image to: {output_path}")
