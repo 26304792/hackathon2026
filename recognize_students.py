@@ -3,30 +3,42 @@ import sqlite3
 import numpy as np
 from insightface.app import FaceAnalysis
 
+
+# -------------------------
 # LOAD FACE MODEL
 # -------------------------
 
 app = FaceAnalysis(name="buffalo_l")
 app.prepare(ctx_id=-1, det_size=(640, 640))
 
+
+# -------------------------
 # LOAD STUDENTS FROM DATABASE
 # -------------------------
 
-connection = sqlite3.connect("students.db")
+connection = sqlite3.connect("face_database.db")
 cursor = connection.cursor()
 
-cursor.execute("SELECT id, name, embedding FROM students")
+cursor.execute(
+    "SELECT id, student_id, embedding FROM students"
+)
+
 students = cursor.fetchall()
 
 connection.close()
 
 print(f"Students in database: {len(students)}")
 
-# Convert database embeddings back into NumPy arrays
+
+# -------------------------
+# CONVERT DATABASE EMBEDDINGS
+# -------------------------
+
 known_students = []
 
 for student in students:
-    student_id, name, embedding_blob = student
+
+    database_id, student_id, embedding_blob = student
 
     embedding = np.frombuffer(
         embedding_blob,
@@ -34,9 +46,11 @@ for student in students:
     )
 
     known_students.append(
-        (student_id, name, embedding)
+        (database_id, student_id, embedding)
     )
 
+
+# -------------------------
 # LOAD CLASSROOM IMAGE
 # -------------------------
 
@@ -46,11 +60,17 @@ if image is None:
     print("Could not load classroom image")
     exit()
 
-# Detect faces
+
+# -------------------------
+# DETECT FACES
+# -------------------------
+
 faces = app.get(image)
 
 print(f"Faces detected: {len(faces)}")
 
+
+# -------------------------
 # RECOGNIZE EACH FACE
 # -------------------------
 
@@ -58,11 +78,11 @@ for face in faces:
 
     face_embedding = face.embedding
 
-    best_name = "UNKNOWN"
+    best_student_id = "UNKNOWN"
     best_similarity = -1
 
-    # Compare against every enrolled student
-    for student_id, name, known_embedding in known_students:
+    # Compare against every student
+    for database_id, student_id, known_embedding in known_students:
 
         similarity = np.dot(
             known_embedding,
@@ -74,18 +94,24 @@ for face in faces:
 
         if similarity > best_similarity:
             best_similarity = similarity
-            best_name = name
+            best_student_id = student_id
 
-    # Only accept the match if similarity is high enough
+
+    # Recognition threshold
     if best_similarity < 0.5:
-        best_name = "UNKNOWN"
+        best_student_id = "UNKNOWN"
+
 
     print(
-        f"Best match: {best_name} "
+        f"Best match: {best_student_id} "
         f"(similarity: {best_similarity:.3f})"
     )
 
-    # Bounding box
+
+    # -------------------------
+    # DRAW BOUNDING BOX
+    # -------------------------
+
     x1, y1, x2, y2 = face.bbox.astype(int)
 
     cv2.rectangle(
@@ -96,10 +122,14 @@ for face in faces:
         2
     )
 
-    # Name
+
+    # -------------------------
+    # DISPLAY STUDENT ID
+    # -------------------------
+
     cv2.putText(
         image,
-        best_name,
+        best_student_id,
         (x1, y1 - 10),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.8,
@@ -107,9 +137,14 @@ for face in faces:
         2
     )
 
+
+# -------------------------
 # SAVE RESULT
 # -------------------------
 
-cv2.imwrite("students_recognised.jpg", image)
+cv2.imwrite(
+    "students_recognised.jpg",
+    image
+)
 
 print("Saved result to students_recognised.jpg")
