@@ -8,7 +8,7 @@ def silent_heartbeat():
     #https://slicer-coauthor-ferment.ngrok-free.dev/
     backend_url = "https://slicer-coauthor-ferment.ngrok-free.dev/api/heartbeat"
     
-    payload = {"student_id": student_id, "location": "Lab 204"}
+    payload = {"student_id": student_id, "location": "ITS"}
     json_data = json.dumps(payload).encode('utf-8')
     
     req = urllib.request.Request(backend_url, data=json_data, method="POST")
