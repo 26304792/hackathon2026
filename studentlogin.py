@@ -2,13 +2,13 @@ import getpass
 import urllib.request
 import json
 import time
+import socket
 
 def silent_heartbeat():
-    student_id = getpass.getuser()
-    #https://slicer-coauthor-ferment.ngrok-free.dev/
+    student_id = getpass.getuser() #e.g. 26304792
     backend_url = "https://slicer-coauthor-ferment.ngrok-free.dev/api/heartbeat"
-    
-    payload = {"student_id": student_id, "location": "ITS"}
+    machine_id = socket.gethostname() #e.g. ITS-DBV-PC44
+    payload = {"student_id": student_id, "machine_id": machine_id}
     json_data = json.dumps(payload).encode('utf-8')
     
     req = urllib.request.Request(backend_url, data=json_data, method="POST")
@@ -16,12 +16,10 @@ def silent_heartbeat():
 
     req.add_header('ngrok-skip-browser-warning', '1')   
 
-    # The infinite loop keeps the script running in the background
     while True:
         try:
             urllib.request.urlopen(req, timeout=5)
         except Exception:
-            # Silently ignore errors so the student isn't bothered
             pass
             
         time.sleep(3)
