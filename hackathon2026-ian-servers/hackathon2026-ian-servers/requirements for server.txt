@@ -1,0 +1,3 @@
+requirements for server.py
+
+pip install Flask qrcode pillow pyOpenSSL cryptography
